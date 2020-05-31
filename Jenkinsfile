@@ -7,7 +7,7 @@ pipeline {
      // YOUR_DOCKERHUB_USERNAME (it doesn't matter if you don't have one)
 
      SERVICE_NAME = "fleetman-position-tracker"
-     REPOSITORY_TAG="${YOUR_DOCKERHUB_USERNAME}/${ORGANIZATION_NAME}-${SERVICE_NAME}:${BUILD_ID}"
+     REPOSITORY_TAG="${YOUR_DOCKERHUB_USERNAME}/${ORGANIZATION_NAME}-${SERVICE_NAME}"
    }
 
    stages {
@@ -22,11 +22,27 @@ pipeline {
             sh '''mvn clean package'''
          }
       }
-
+/*
       stage('Build and Push Image') {
          steps {
            sh 'docker image build -t ${REPOSITORY_TAG} .'
          }
+      }
+*/
+       stage('Build and push image'){
+        when {
+               branch 'master'
+         }
+         steps {
+            script{
+               app = docker.build(REPOSITORY_TAG)  
+               docker.withRegistry('https://registry.hub.docker.com','docker_hub_login'){
+                  app.push('latest')
+               }
+            }
+
+         }
+         
       }
 
       stage('Deploy to Cluster') {
